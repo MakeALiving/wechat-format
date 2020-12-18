@@ -2,13 +2,40 @@ var defaultTheme = {
   BASE: {
     'text-align': 'left',
     'color': '#3f3f3f',
-    'line-height': '1.5'
+    'line-height': '1.5',
   },
   BASE_BLOCK: {
-    'margin': '20px 10px'
+    
   },
   // block element
   block: {
+    // 新闻详情盒子
+    'news-box': {
+      'margin-left': '0',
+      'padding-left': '30px'
+    },
+    'news-index': {
+      'display': 'inline-block',
+      'width': '30px', 
+      'text-align': 'right',
+      'margin-left': '-30px'
+    },
+    'news-item': {
+      'color': '#444',
+      'padding': '0 0 8px 30px',
+      'margin': '0',
+      'font-weight': 'bold',
+      'font-size': '16px'
+    },
+    // 新闻内容
+    'news-detail': {
+      'color': '#9a9a9a',
+      'font-weight': 'normal',
+      'font-size': '15px',
+      'padding': '0 0 12px 30px',
+      // 'margin': '0 0 5px 30px'
+    },
+
     h2: {
       'font-size': '140%',
       'text-align': 'center',
@@ -23,7 +50,7 @@ var defaultTheme = {
     },
     p: {
       'margin': '10px 10px',
-      'line-height': '1.6'
+      'line-height': '1.5'
     },
     blockquote: {
       'color': 'rgb(91, 91, 91)',
@@ -52,19 +79,10 @@ var defaultTheme = {
       'border-radius': '4px',
       'display': 'block',
     },
-    ol: {
-      'margin-left': '0',
-      'padding-left': '20px'
-    },
-    ul: {
-      'margin-left': '0',
-      'padding-left': '20px',
-      'list-style': 'circle',
-    },
     footnotes: {
       'margin': '10px 10px',
       'font-size': '14px'
-    }  
+    }
   },
   inline: {
     // inline element

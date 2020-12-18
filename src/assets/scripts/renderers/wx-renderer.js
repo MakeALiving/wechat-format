@@ -11,14 +11,13 @@ var WxRenderer = function (opts) {
 
   var COPY = function (base, extend) { return Object.assign({}, base, extend)}
 
+  var newTitleIndex = 0;  // 新闻条数索引
+
   this.buildTheme = function (themeTpl) {
     var mapping = {}
     var base = COPY(themeTpl.BASE, {
       'font-family': this.opts.fonts,
       'font-size': this.opts.size
-    })
-    var base_block = COPY(base, {
-      'margin': '20px 10px'
     })
     for (var ele in themeTpl.inline) {
       if (themeTpl.inline.hasOwnProperty(ele)) {
@@ -35,7 +34,7 @@ var WxRenderer = function (opts) {
         if (ele === 'code') {
           style['font-family'] = FONT_FAMILY_MONO
         }
-        mapping[ele] = COPY(base_block, style)
+        mapping[ele] = COPY(base, style)
       }
     }
     return mapping
@@ -74,7 +73,60 @@ var WxRenderer = function (opts) {
     return footnotes.length !== 0
   }
 
-  this.getRenderer = function () {
+  this.getRenderer = function() {
+    footnotes = []
+    footnoteindex = 0
+  
+    styleMapping = this.buildTheme(this.opts.theme)
+    var renderer = new marked.Renderer()
+    FuriganaMD.register(renderer);
+
+    renderer.heading = function(text, level) {
+      console.log(text, 'heading');
+      if (level === 1) {  // 章节小标题  今日黄历、每日精句、精选新闻等
+        return '<h2 ' + S('h2') + '>' + text + '</h2>'
+      } else if (level === 2) { // 新闻内容标题
+        newTitleIndex++;
+        return '<h1 ' + S('news-item') + '><span ' + S('index') + '>' + newTitleIndex + '. </span>' + text + '</h1>';
+      } else {
+        return '<h3 ' + S('h3') + '>' + text + '</h3>'
+      }
+    }
+
+    renderer.listitem = function (text, or, s) {
+      console.log(text, or, s,  'listitem');
+      newTitleIndex++;
+      return '<h1 ' + S('news-item') + '><span ' + S('index') + '>' + newTitleIndex + '. </span>' + text + '</h1>';
+    }
+    renderer.list = function (text, ordered, start) {
+      console.log(text, '\n', ordered, '\n', start, 'list');
+      var segments = text.split('<%s/>');
+      if (!ordered) {
+        text = segments.join('•');
+        return '<div ' + S('news-box') + '>' + text + '</div>';
+      }
+      text = segments[0];
+      for (var i = 1; i < segments.length; i++) {
+        text = text + i + '.' + segments[i];
+      }
+      return '<div ' + S('news-box') + '>' + text + '</div>';
+    }
+
+    renderer.paragraph = function(text) {
+      if (text.indexOf('PP ') > -1) {
+        return '<p ' + S('news-detail') + '>' + text.substring(3) + '</p>';
+      }
+      return '<p ' + S('p') + '>' + text + '</p>';
+    }
+
+    renderer.image = function (href, title, text) {
+      return '<img ' + S(ENV_STETCH_IMAGE ? 'image' : 'image_org') + ' src="' + href + '" title="'+title+'" alt="'+text+'"/>'
+    }
+    
+    return renderer;
+  }
+
+  this.getRendererss = function () {
     footnotes = []
     footnoteindex = 0
   
@@ -83,16 +135,25 @@ var WxRenderer = function (opts) {
     FuriganaMD.register(renderer);
   
     renderer.heading = function (text, level) {
-      if (level < 3) {
+      if (level === 1) {  // 章节小标题  今日黄历、每日精句、精选新闻等
+        return '<h2 ' + S('h2') + '>' + text + '</h2>'
+      } else if (level === 2) { // 新闻内容标题
+        newTitleIndex++;
+        return '<h1 ' + S('h1') + '><span style="display: inline-block; width: 30px; text-align: right;">' + newTitleIndex + '. </span>' + text + '</h1>'
+      } else if (level === 3) {
         return '<h2 ' + S('h2') + '>' + text + '</h2>'
       } else {
         return '<h3 ' + S('h3') + '>' + text + '</h3>'
       }
     }
     renderer.paragraph = function (text) {
+      if (text.indexOf('PP ') > -1) {
+        return '<section ' + S('section') + '>' + text.substring(3) + '</section>';
+      }
       return '<p ' + S('p') + '>' + text + '</p>'
     }
     renderer.blockquote = function (text) {
+      console.log(text, 'block,,,,,,,,')
       return '<blockquote ' + S('blockquote') + '>' + text + '</blockquote>'
     }
     renderer.code = function (text, infostring) {
@@ -117,24 +178,8 @@ var WxRenderer = function (opts) {
     renderer.codespan = function (text, infostring) {
       return '<code ' + S('codespan') + '>' + text + '</code>'
     }
-    renderer.listitem = function (text) {
-      return '<span ' + S('listitem') + '><span style="margin-right: 10px;"><%s/></span>' + text + '</span>';
-    }
-    renderer.list = function (text, ordered, start) {
-      var segments = text.split('<%s/>');
-      if (!ordered) {
-        text = segments.join('•');
-        return '<p ' + S('ul') + '>' + text + '</p>';
-      }
-      text = segments[0];
-      for (var i = 1; i < segments.length; i++) {
-        text = text + i + '.' + segments[i];
-      }
-      return '<p ' + S('ol') + '>' + text + '</p>';
-    }
-    renderer.image = function (href, title, text) {
-      return '<img ' + S(ENV_STETCH_IMAGE ? 'image' : 'image_org') + ' src="' + href + '" title="'+title+'" alt="'+text+'"/>'
-    }
+    
+    
     renderer.link = function (href, title, text) {
       if (href.indexOf('https://mp.weixin.qq.com') === 0) {
         return '<a href="' + href +'" title="' + (title || text) + '" ' + S('wx_link') +'>' + text + '</a>'; 
